@@ -37,8 +37,12 @@ dir "$spsDir\*.sps" |% {
 	$dist = $app.DownloadUrl
 
 	if ($dist.contains('portableapps.com') -or $dist.contains('sourceforge.net/portableapps')) {
-		# PortableApps.com is covered by another script
 		write-host 'PortableApps.com' -f red
+		return
+	}
+
+	if ($dist.contains('nirsoft')) {
+		write-host 'NirSoft' -f red
 		return
 	}
 

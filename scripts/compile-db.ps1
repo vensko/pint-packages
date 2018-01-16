@@ -4,6 +4,7 @@ $packagesIni = $baseDir + 'packages.ini'
 $dirs = @(
 	($baseDir + 'packages\portableapps.com'),
 	($baseDir + 'packages\ugmfree.it'),
+	($baseDir + 'packages\nirsoft.net'),
 	($baseDir + 'packages\pint')
 )
 
