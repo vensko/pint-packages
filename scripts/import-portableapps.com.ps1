@@ -4,12 +4,13 @@ $client = (new-object Net.WebClient)
 $client.Headers['User-Agent'] = $userAgent
 
 $pahost = 'https://portableapps.com/';
-$url = $pahost + 'apps';
+$url = $pahost + 'apps'
 $content = $client.DownloadString($url) -replace '<!--(.+?)-->',''
 $matches = [regex]::Matches($content, 'apps/\w+/([\w_-]+?)[_-]portable', 'IgnoreCase')
-$target = $PSScriptRoot + '\..\portableapps.com.ini'
+$targetDir = $PSScriptRoot + '\..\portableapps.com'
 
-Clear-Content $target
+md $targetDir -ea 0 | out-null
+del (join-path $targetDir '*.ini')
 
 $done = @()
 
@@ -58,14 +59,12 @@ foreach ($match in $matches) {
 		write-host 'OK' -f green
 
 		$ini = @"
-[$id]
 dist = $url
 link = .paf.exe
 keep = data
-
 "@
 
-		$ini | out-file $target -append -encoding ascii
+		$ini | out-file (join-path $targetDir "$id.ini") -append -encoding ascii
 
 		$done += @($id)
 
