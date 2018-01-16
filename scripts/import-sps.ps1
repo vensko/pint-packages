@@ -46,6 +46,11 @@ dir "$spsDir\*.sps" |% {
 		return
 	}
 
+	if ($dist.contains('sysinternals')) {
+		write-host 'Sysinternals' -f red
+		return
+	}
+
 	try {
 		$req = [Net.WebRequest]::Create($dist)
 
