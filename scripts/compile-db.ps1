@@ -1,18 +1,27 @@
 $baseDir = $PSScriptRoot + '\..\'
+$packagesIni = $baseDir + 'packages.ini'
 
 $dirs = @(
-	($baseDir + 'portableapps.com'),
-	($baseDir + 'packages')
+	($baseDir + 'packages\portableapps.com'),
+	($baseDir + 'packages\ugmfree.it'),
+	($baseDir + 'packages\pint')
 )
 
-$ini = ''
+clear-content $packagesIni
 
 $dirs |% {
+
+	$dir = gi $_
+
+	$ini = ''
 	dir "$_\*.ini" |% {
 		$ini += "[$($_.basename)]`r`n"
-		$ini += [IO.File]::ReadAllText($_.fullname)
-		$ini += "`r`n"
+		$ini += [IO.File]::ReadAllText($_.fullname).trim()
+		$ini += "`r`n`r`n"
 	}
-}
 
-$ini.trim() | out-file "$baseDir\packages.ini" -encoding ascii
+	$file = "$baseDir\packages-$($dir.basename).ini"
+
+	$ini | out-file $file -encoding ascii
+	$ini | out-file $packagesIni -append -encoding ascii
+}

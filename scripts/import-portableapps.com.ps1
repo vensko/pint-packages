@@ -1,7 +1,4 @@
-$userAgent = 'PintBot/1.0 (+https://github.com/vensko/pint)'
-
-$client = (new-object Net.WebClient)
-$client.Headers['User-Agent'] = $userAgent
+. .\common.ps1
 
 $pahost = 'https://portableapps.com/';
 $url = $pahost + 'apps'
@@ -52,7 +49,7 @@ foreach ($match in $matches) {
 		$res.close()
 
 		if ($res.Headers['Content-Type'].contains('text/html')) {
-			write-host 'HTML page' -red
+			write-host 'HTML page' -f red
 			continue
 		}
 
