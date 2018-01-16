@@ -4,7 +4,7 @@ $pahost = 'https://portableapps.com/';
 $url = $pahost + 'apps'
 $content = $client.DownloadString($url) -replace '<!--(.+?)-->',''
 $matches = [regex]::Matches($content, 'apps/\w+/([\w_-]+?)[_-]portable', 'IgnoreCase')
-$targetDir = $PSScriptRoot + '\..\portableapps.com'
+$targetDir = $PSScriptRoot + '\..\packages\portableapps.com'
 
 md $targetDir -ea 0 | out-null
 del (join-path $targetDir '*.ini')
