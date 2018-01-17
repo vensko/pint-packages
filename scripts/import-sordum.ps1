@@ -11,7 +11,7 @@ del (join-path $targetDir '*.ini')
 
 foreach ($match in $matches) {
 
-	$id = $match.groups[2].value.ToLower().trim() -replace '[ -]+','-' -replace '[^\w-]+',''
+	$id = $match.groups[2].value.ToLower().trim() -replace '[ -]+','-' -replace '[^\w-]+','' -replace 'sordum-',''
 	$id = 'sordum-' + $id
 
 	$url = $match.groups[1].value
