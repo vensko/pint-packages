@@ -36,4 +36,5 @@ $dirs |% {
 	$ini | out-file $file -encoding ascii
 }
 
-$index.values -join '' | out-file $packagesIni -encoding ascii
+$ini = $index.keys | sort |% { $index[$_] }
+$ini -join '' | out-file $packagesIni -encoding ascii
