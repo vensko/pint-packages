@@ -36,7 +36,7 @@ dir "$spsDir\*.sps" |% {
 
 	$dist = $app.DownloadUrl
 
-	if ($dist.contains('portableapps.com') -or $dist.contains('sourceforge.net/portableapps')) {
+	if ($dist.contains('portableapps.com') -or $dist.contains('sourceforge.net/portableapps') -or $dist.contains('sourceforge.net/project/portableapps')) {
 		write-host 'PortableApps.com' -f red
 		return
 	}
@@ -84,7 +84,7 @@ dir "$spsDir\*.sps" |% {
 	$db[$id]["dist$arch"] = $app.DownloadUrl
 
 	if ($app.UpdateNoCopyFiles) {
-		$db[$id]["keep$arch"] = (($app.UpdateNoCopyFiles -split ';') |% trim) -join ', '
+		$db[$id]["keep$arch"] = ( ($app.UpdateNoCopyFiles -split ';') |% trim |% { $_.trim('/') } ) -join ', '
 	}
 
 	if ($app.CleanUpdate -eq 'false') {
