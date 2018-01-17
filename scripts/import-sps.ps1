@@ -51,6 +51,11 @@ dir "$spsDir\*.sps" |% {
 		return
 	}
 
+	if ($dist.contains('sordum.org')) {
+		write-host 'Sordum' -f red
+		return
+	}
+
 	try {
 		$req = [Net.WebRequest]::Create($dist)
 
