@@ -11,19 +11,29 @@ $dirs = @(
 
 clear-content $packagesIni
 
+$index = @{}
+
 $dirs |% {
 
 	$dir = gi $_
 
 	$ini = ''
 	dir "$_\*.ini" |% {
-		$ini += "[$($_.basename)]`r`n"
-		$ini += [IO.File]::ReadAllText($_.fullname).trim()
-		$ini += "`r`n`r`n"
+		$id = $_.basename
+		$config = [IO.File]::ReadAllText($_.fullname).trim()
+
+		$section = ''
+		$section += "[$id]`r`n"
+		$section += $config
+		$section += "`r`n`r`n"
+
+		$ini += $section
+		$index[$id] = $section
 	}
 
 	$file = "$baseDir\packages-$($dir.basename).ini"
 
 	$ini | out-file $file -encoding ascii
-	$ini | out-file $packagesIni -append -encoding ascii
 }
+
+$index.values -join '' | out-file $packagesIni -encoding ascii
