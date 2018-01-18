@@ -22,12 +22,13 @@ foreach ($match in $matches) {
 		$appContent = $client.DownloadString($url);
 
 		$link = [regex]::Matches($appContent, '(?:/downloads/|downloads\.php)\?([^"]+)') | select -first 1
-		$link = 'https://www.sordum.org/files/downloads.php?' + $link.groups[1].value
 
 		if (!$link) {
 		    write-host 'LINK NOT FOUND' -f red
 		    continue
 		}
+
+		$link = 'https://www.sordum.org/files/downloads.php?' + $link.groups[1].value
 
 		try {
 			$req = [Net.WebRequest]::Create($link)
