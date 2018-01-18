@@ -37,48 +37,37 @@ dir "$spsDir\*.sps" |% {
 	$dist = $app.DownloadUrl
 
 	if ($dist.contains('portableapps.com') -or $dist.contains('sourceforge.net/portableapps') -or $dist.contains('sourceforge.net/project/portableapps')) {
-		write-host 'PortableApps.com' -f red
+		write-host 'PortableApps.com' -f yellow
 		return
 	}
 
 	if ($dist.contains('nirsoft')) {
-		write-host 'NirSoft' -f red
+		write-host 'NirSoft' -f yellow
 		return
 	}
 
 	if ($dist.contains('sysinternals')) {
-		write-host 'Sysinternals' -f red
+		write-host 'Sysinternals' -f yellow
 		return
 	}
 
 	if ($dist.contains('sordum.org')) {
-		write-host 'Sordum' -f red
+		write-host 'Sordum' -f yellow
 		return
 	}
 
 	try {
-		$req = [Net.WebRequest]::Create($dist)
-
-		if ($dist.startswith('ftp:')) {
-			$req.Method = [Net.WebRequestMethods+Ftp]::GetFileSize
-		} else {
-			$req.Timeout = 50000
-			$req.UserAgent = $userAgent
-			$req.AllowAutoRedirect = $true
-			$req.MaximumAutomaticRedirections = 5
-		}
-
-		$res = $req.GetResponse()
+		$res = pint-make-request $dist
 		$res.close()
 
 		if ($res.Headers['Content-Type'].contains('text/html')) {
-			write-host 'HTML page' -f red
+			write-host 'HTML page' $dist -f red
 			return
 		}
 
 		write-host 'OK' -f green
 	} catch {
-		write-host $_.Exception.InnerException.Message -f red
+		write-host $_.Exception.Message $dist -f red
 		return
 	}
 
