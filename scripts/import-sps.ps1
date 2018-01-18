@@ -32,7 +32,7 @@ dir "$spsDir\*.sps" |% {
 	$arch = if ($name.contains('x64')) { '64' } else { '' }
 
 	$id = $name -replace ' \(.+?\)',''
-	$id = $id.ToLower().trim() -replace ' portable','' -replace '[ -]+','-' -replace '[^\w-]+',''
+	$id = $id.ToLower().trim() -replace ' portable','' -replace '[ _-]+','-' -replace '[^\w-]+',''
 
 	$dist = $app.DownloadUrl
 
