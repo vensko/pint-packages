@@ -4,16 +4,14 @@ $targetDir = $baseDir + '\..\packages\ugmfree.it'
 $spsDir = join-path $baseDir 'sps'
 $spsFile = join-path $baseDir 'sps.zip'
 
-[xml]$xml = $client.DownloadString('http://www.ugmfree.it/Services/SymenuSPS.asmx/GetSyMenuSuiteUrl')
-
-$dbUrl = $xml.string.InnerText.trim()
-
 md $spsDir -ea 0 | out-null
 
 md $targetDir -ea 0 | out-null
 del (join-path $targetDir '*.ini')
 
 if (!(test-path $spsFile -pathtype leaf)) {
+	[xml]$xml = $client.DownloadString('http://www.ugmfree.it/Services/SymenuSPS.asmx/GetSyMenuSuiteUrl')
+	$dbUrl = $xml.string.InnerText.trim()
 	$client.DownloadFile($dbUrl, $spsFile)
 }
 
