@@ -31,22 +31,28 @@ foreach ($match in $matches) {
 		try {
 			$res = pint-make-request $link
 
-			if ($res.ContentType.contains('text/html')) {
+			if (([string]$res.ContentType).contains('text/html')) {
 				write-host 'HTML page' $link -f red
 				continue
 			}
 
 			$res.close()
-		} catch {
-			write-host $_.Exception.InnerException.Message $link -f red
-			continue
-		}
 
-		write-host 'OK' -f green
+			write-host 'OK' -f green
+		} catch {
+			$msg = if ($_.Exception.InnerException) { $_.Exception.InnerException.Message } else { $_.Exception.Message }
+
+			if ($msg.contains('timed out')) {
+				write-host $msg $link -f yellow
+			} else {
+				write-host $msg $link -f red
+				continue
+			}
+		}
 
 		"dist = $link" | out-file (join-path $targetDir "$id.ini") -encoding ascii
 
 	} catch {
-		write-host $_.Exception.InnerException.Message -f red
+		write-host $_.Exception.Message -f red
 	}
 }

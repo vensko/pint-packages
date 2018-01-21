@@ -5,9 +5,7 @@ $spsDir = join-path $baseDir 'sps'
 $spsFile = join-path $baseDir 'sps.zip'
 
 ni $spsDir -type directory -ea 0 | out-null
-
 ni $targetDir -type directory -ea 0 | out-null
-del (join-path $targetDir '*.ini')
 
 if (!(test-path $spsFile -pathtype leaf)) {
 	[xml]$xml = $client.DownloadString('http://www.ugmfree.it/Services/SymenuSPS.asmx/GetSyMenuSuiteUrl')
@@ -73,29 +71,12 @@ dir "$spsDir\*.sps" |% {
 
 		write-host 'OK' -f green
 	} catch {
-		try {
-			# Retry
-			write-host '(RETRYING) ' -f red -nonewline
+		$msg = if ($_.Exception.InnerException) { $_.Exception.InnerException.Message } else { $_.Exception.Message }
 
-			$res = pint-make-request $dist
-			[string]$contentType = $res.ContentType
-
-			if (([string]$res.ResponseUri).contains('./')) {
-				$res.close()
-				write-host 'LINK CONTAINS ./ (POWERSHELL BUG)' -f red
-				return
-			}
-
-			$res.close()
-
-			if ($contentType.contains('text/html')) {
-				write-host 'HTML page' $dist -f red
-				return
-			}
-
-			write-host 'OK' -f green
-		} catch {
-			write-host $_.Exception.Message $dist -f red
+		if ($msg.contains('timed out')) {
+			write-host $msg $dist -f yellow
+		} else {
+			write-host $msg $dist -f red
 			return
 		}
 	}
@@ -118,6 +99,8 @@ dir "$spsDir\*.sps" |% {
 		$db[$id]["create$arch"] = (($app.FirstInstallCreateFiles -split ';') |% trim) -join ', '
 	}
 }
+
+del (join-path $targetDir '*.ini')
 
 $db.keys |% {
 	$id = $_

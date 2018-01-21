@@ -41,12 +41,18 @@ foreach ($match in $matches) {
 
 			$link = $res.ResponseUri
 			$res.close()
-		} catch {
-			write-host $_.Exception.Message $link -f red
-			continue
-		}
 
-		write-host 'OK' -f green
+			write-host 'OK' -f green
+		} catch {
+			$msg = if ($_.Exception.InnerException) { $_.Exception.InnerException.Message } else { $_.Exception.Message }
+
+			if ($msg.contains('timed out')) {
+				write-host $msg $dist -f yellow
+			} else {
+				write-host $msg $dist -f red
+				continue
+			}
+		}
 
 		"dist = $link" | out-file (join-path $targetDir "$id.ini") -encoding ascii
 

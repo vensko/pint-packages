@@ -23,54 +23,60 @@ foreach ($match in $matches) {
 
 	write-host $uri.padright(50, ' ') ' ' -nonewline
 
+	$appContent = $client.DownloadString($url) -replace "`n",'' -replace '<!--(.+?)-->',''
+
+	if ($appContent -match '[\d\.]+\+[\d\.]+\w+ download' -or $appContent -like '*online installer*') {
+	    write-host 'ONLINE INSTALLER' -f red
+	    continue
+	}
+
+	$link = [regex]::Matches($appContent, '[^"]+?\.paf\.exe') |% { $_.groups[0].value } | select -first 1
+
+	if (!$link) {
+	    write-host 'LINK NOT FOUND' -f red
+	    continue
+	}
+
+	if ($link.startswith('/')) {
+		$link = $pahost.trim('/') + $link
+	}
+
 	try {
-		$appContent = $client.DownloadString($url) -replace "`n",'' -replace '<!--(.+?)-->',''
-
-		if ($appContent -match '[\d\.]+\+[\d\.]+\w+ download' -or $appContent -like '*online installer*') {
-		    write-host 'ONLINE INSTALLER' -f red
-		    continue
-		}
-
-		$link = [regex]::Matches($appContent, '[^"]+?\.paf\.exe') |% { $_.groups[0].value } | select -first 1
-
-		if (!$link) {
-		    write-host 'LINK NOT FOUND' -f red
-		    continue
-		}
-
-		if ($link.startswith('/')) {
-			$link = $pahost.trim('/') + $link
-		}
-
 		$res = pint-make-request $link
+	} catch {
+		$msg = if ($_.Exception.InnerException) { $_.Exception.InnerException.Message } else { $_.Exception.Message }
 
-		if ($res.ContentType.contains('text/html')) {
-			$res.close()
-			write-host 'HTML page' $link -f red
+		if ($msg.contains('timed out')) {
+			write-host $msg $link -f yellow
+		} else {
+			write-host $msg $link -f red
 			continue
 		}
+	}
 
-		if (([string]$res.ResponseUri).contains('./')) {
-			$res.close()
-			write-host 'LINK CONTAINS ./ (POWERSHELL BUG)' -f red
-			continue
-		}
-
+	if (([string]$res.ContentType).contains('text/html')) {
 		$res.close()
+		write-host 'HTML page' $link -f red
+		continue
+	}
 
-		write-host 'OK' -f green
+	if (([string]$res.ResponseUri).contains('./')) {
+		$res.close()
+		write-host 'LINK CONTAINS ./ (POWERSHELL BUG)' -f red
+		continue
+	}
 
-		$ini = @"
+	$res.close()
+
+	write-host 'OK' -f green
+
+	$ini = @"
 dist = $url
 link = .paf.exe
 keep = data
 "@
 
-		$ini | out-file (join-path $targetDir "$id.ini") -encoding ascii
+	$ini | out-file (join-path $targetDir "$id.ini") -encoding ascii
 
-		$done += @($id)
-
-	} catch {
-		write-host $_.Exception.Message -f red
-	}
+	$done += @($id)
 }

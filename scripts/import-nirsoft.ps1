@@ -32,7 +32,7 @@ foreach ($match in $matches) {
 
 		if ($link) {
 			$link = $link.groups[1].value
-			$link = if ($link[0] -eq '/') { $siteUrl + $link } else { $url + '/../' + $link } # relarive paths hack
+			$link = if ($link[0] -eq '/') { $siteUrl + $link } else { $url + '/../' + $link } # relative paths hack
 
 			try {
 				$res = pint-make-request $link
@@ -44,8 +44,14 @@ foreach ($match in $matches) {
 					$link = $res.ResponseUri
 				}
 			} catch {
-				write-host $_.Exception.InnerException.Message $link -f red
-				$link = ''
+				$msg = $_.Exception.InnerException.Message
+
+				if ($msg.contains('timed out')) {
+					write-host $msg $link -f yellow
+				} else {
+					write-host $msg $link -f red
+					$link = ''
+				}
 			} finally {
 				if ($res) { $res.close() }
 			}
@@ -65,8 +71,14 @@ foreach ($match in $matches) {
 					$link64 = $res.ResponseUri
 				}
 			} catch {
-				write-host $_.Exception.InnerException.Message $link64 -f red
-				$link64 = ''
+				$msg = if ($_.Exception.InnerException) { $_.Exception.InnerException.Message } else { $_.Exception.Message }
+
+				if ($msg.contains('timed out')) {
+					write-host $msg $link64 -f yellow
+				} else {
+					write-host $msg $link64 -f red
+					$link64 = ''
+				}
 			} finally {
 				if ($res) { $res.close() }
 			}
@@ -83,9 +95,9 @@ foreach ($match in $matches) {
 		if ($link64) { $ini += "dist64 = $link64" }
 		$ini += "keep = *.cfg"
 
-		$ini -join "`r`n" | out-file (join-path $targetDir "$id.ini") -append -encoding ascii
+		$ini -join "`r`n" | out-file (join-path $targetDir "$id.ini") -encoding ascii
 
 	} catch {
-		write-host $_.Exception.InnerException.Message -f red
+		write-host $_.Exception.Message -f red
 	}
 }
