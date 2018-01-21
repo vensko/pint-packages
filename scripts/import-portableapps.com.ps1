@@ -70,11 +70,11 @@ foreach ($match in $matches) {
 
 	write-host 'OK' -f green
 
-	$ini = @"
-dist = $url
-link = .paf.exe
-keep = data
-"@
+	$ini = @()
+	$ini += "dist = $url"
+	$ini += "link = .paf.exe"
+	$ini += "keep = data"
+	$ini = $ini -join "`r`n"
 
 	$ini | out-file (join-path $targetDir "$id.ini") -encoding ascii
 
