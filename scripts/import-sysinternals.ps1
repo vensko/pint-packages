@@ -5,10 +5,10 @@ $content = $client.DownloadString($baseUrl) -replace '<!--(.+?)-->',''
 $matches = [regex]::Matches($content, 'href="(.+?)" data-linktype="relative-path"')
 $targetDir = $PSScriptRoot + '\..\packages\sysinternals'
 
-md $targetDir -ea 0 | out-null
+ni $targetDir -type directory -ea 0 | out-null
 del (join-path $targetDir '*.ini')
 
-"dist = https://download.sysinternals.com/files/SysinternalsSuite.zip" | out-file (join-path $targetDir "sysinternals.ini") -append -encoding ascii
+"dist = https://download.sysinternals.com/files/SysinternalsSuite.zip" | out-file (join-path $targetDir "sysinternals.ini") -encoding ascii
 
 foreach ($match in $matches) {
 
@@ -29,17 +29,14 @@ foreach ($match in $matches) {
 		}
 
 		try {
-			$req = [Net.WebRequest]::Create($link)
-			$req.Timeout = 50000
-			$req.UserAgent = $userAgent
-			$req.Referer = $link
-			$res = $req.GetResponse()
-			$res.close()
+			$res = pint-make-request $link
 
-			if ($res.Headers['Content-Type'].contains('text/html')) {
+			if ($res.ContentType.contains('text/html')) {
 				write-host 'HTML page' $link -f red
 				continue
 			}
+
+			$res.close()
 		} catch {
 			write-host $_.Exception.InnerException.Message $link -f red
 			continue
@@ -47,7 +44,7 @@ foreach ($match in $matches) {
 
 		write-host 'OK' -f green
 
-		"dist = $link" | out-file (join-path $targetDir "$id.ini") -append -encoding ascii
+		"dist = $link" | out-file (join-path $targetDir "$id.ini") -encoding ascii
 
 	} catch {
 		write-host $_.Exception.InnerException.Message -f red

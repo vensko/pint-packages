@@ -6,7 +6,7 @@ $content = $client.DownloadString($baseUrl) -replace '<!--(.+?)-->',''
 $matches = [regex]::Matches($content, 'href="([^"]+?)">(.+?)</a><span title="Number of downloads"> - \d+</span>')
 $targetDir = $PSScriptRoot + '\..\packages\sordum.org'
 
-md $targetDir -ea 0 | out-null
+ni $targetDir -type directory -ea 0 | out-null
 del (join-path $targetDir '*.ini')
 
 foreach ($match in $matches) {
@@ -31,27 +31,24 @@ foreach ($match in $matches) {
 		$link = 'https://www.sordum.org/files/downloads.php?' + $link.groups[1].value
 
 		try {
-			$req = [Net.WebRequest]::Create($link)
-			$req.Timeout = 50000
-			$req.UserAgent = $userAgent
-			$req.Referer = $link
-			$res = $req.GetResponse()
-			$res.close()
+			$res = pint-make-request $link
 
-			if ($res.Headers['Content-Type'].contains('text/html')) {
+			if ($res.ContentType.contains('text/html')) {
+				$res.close()
 				write-host 'HTML page' $link -f red
 				continue
 			}
 
 			$link = $res.ResponseUri
+			$res.close()
 		} catch {
-			write-host $_.Exception.InnerException.Message $link -f red
+			write-host $_.Exception.Message $link -f red
 			continue
 		}
 
 		write-host 'OK' -f green
 
-		"dist = $link" | out-file (join-path $targetDir "$id.ini") -append -encoding ascii
+		"dist = $link" | out-file (join-path $targetDir "$id.ini") -encoding ascii
 
 	} catch {
 		write-host $_.Exception.Message -f red

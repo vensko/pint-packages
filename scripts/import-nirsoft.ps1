@@ -6,7 +6,7 @@ $content = $client.DownloadString($baseUrl) -replace '<!--(.+?)-->',''
 $matches = [regex]::Matches($content, '<a class="filetitle" href="(.+?)"')
 $targetDir = $PSScriptRoot + '\..\packages\nirsoft.net'
 
-md $targetDir -ea 0 | out-null
+ni $targetDir -type directory -ea 0 | out-null
 del (join-path $targetDir '*.ini')
 
 foreach ($match in $matches) {
@@ -35,22 +35,19 @@ foreach ($match in $matches) {
 			$link = if ($link[0] -eq '/') { $siteUrl + $link } else { $url + '/../' + $link } # relarive paths hack
 
 			try {
-				$req = [Net.WebRequest]::Create($link)
-				$req.Timeout = 50000
-				$req.UserAgent = $userAgent
-				$req.Referer = $link
-				$res = $req.GetResponse()
-				$res.close()
+				$res = pint-make-request $link
 
-				if ($res.Headers['Content-Type'].contains('text/html')) {
+				if ($res.ContentType.contains('text/html')) {
 					write-host 'HTML page' $link -f red
 					$link = ''
+				} else {
+					$link = $res.ResponseUri
 				}
-
-				$link = $res.ResponseUri
 			} catch {
 				write-host $_.Exception.InnerException.Message $link -f red
 				$link = ''
+			} finally {
+				if ($res) { $res.close() }
 			}
 		}
 
@@ -59,22 +56,19 @@ foreach ($match in $matches) {
 			$link64 = if ($link64[0] -eq '/') { $siteUrl + $link64 } else { $baseUrl + $link64 }
 
 			try {
-				$req = [Net.WebRequest]::Create($link64)
-				$req.Timeout = 50000
-				$req.UserAgent = $userAgent
-				$req.Referer = $link64
-				$res = $req.GetResponse()
-				$res.close()
+				$res = pint-make-request $link64
 
-				if ($res.Headers['Content-Type'].contains('text/html')) {
+				if ($res.ContentType.contains('text/html')) {
 					write-host 'HTML page' $link64 -f red
 					$link64 = ''
+				} else {
+					$link64 = $res.ResponseUri
 				}
-
-				$link64 = $res.ResponseUri
 			} catch {
 				write-host $_.Exception.InnerException.Message $link64 -f red
 				$link64 = ''
+			} finally {
+				if ($res) { $res.close() }
 			}
 		}
 

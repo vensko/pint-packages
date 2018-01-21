@@ -1,5 +1,5 @@
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-[Net.ServicePointManager]::ServerCertificateValidationCallback = {$true}
+[Net.ServicePointManager]::ServerCertificateValidationCallback = $null
 
 $baseDir = (Resolve-Path .\).Path
 
@@ -11,9 +11,13 @@ $client.Headers['User-Agent'] = $userAgent
 
 function unpack-zip($file, $dir)
 {
-	$shell = new-object -com Shell.Application
-	$zip = $shell.NameSpace($file)
-	$shell.Namespace($dir).copyhere($zip.items(), 20)
+	try {
+		unzip $file $dir
+	} catch {
+		$shell = new-object -com Shell.Application
+		$zip = $shell.NameSpace($file)
+		$shell.Namespace($dir).copyhere($zip.items(), 20)
+	}
 }
 
 function user-agent($url)
@@ -40,10 +44,10 @@ function pint-make-http-request([string]$url)
 		$req.Timeout = $httpTimeout
 		$req.userAgent = user-agent $url
 		$req.AllowAutoRedirect = $true
-		$req.KeepAlive = $false
+		$req.KeepAlive = $true
 		$req.MaximumAutomaticRedirections = 5
 		$req.Accept = '*/*'
-		if (!$url.contains('sourceforge.net')) {
+		if (!$url.contains('sourceforge.net') -and !$url.contains('downloads.portableapps.com')) {
 			$req.Referer = $url
 		}
 		$req.GetResponse()
@@ -51,8 +55,15 @@ function pint-make-http-request([string]$url)
 		$e = $_.Exception.InnerException
 		$headers = $e.Response.Headers
 
-		if ($headers -and ([string]$headers['Location']).StartsWith('ftp:')) {
-			return pint-make-ftp-request $headers['Location']
+		if ($headers) {
+			[string]$location = if ($headers['location']) { $headers['location'] } else { $headers['Location'] }
+
+			if ($location) {
+				if ($location.StartsWith('ftp:')) {
+					return pint-make-ftp-request $headers['Location']
+				}
+				return pint-make-http-request $location
+			}
 		}
 
 		throw $e
@@ -68,4 +79,25 @@ function pint-make-request([string]$url)
 	}
 
 	return $res
+}
+
+function unzip($zipfile, $outdir)
+{
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $archive = [System.IO.Compression.ZipFile]::OpenRead($zipfile)
+    foreach ($entry in $archive.Entries)
+    {
+        $entryTargetFilePath = [System.IO.Path]::Combine($outdir, $entry.FullName)
+        $entryDir = [System.IO.Path]::GetDirectoryName($entryTargetFilePath)
+        
+        #Ensure the directory of the archive entry exists
+        if(!(Test-Path $entryDir )){
+            New-Item -ItemType Directory -Path $entryDir | Out-Null 
+        }
+        
+        #If the entry is not a directory entry, then extract entry
+        if(!$entryTargetFilePath.EndsWith("\")){
+            [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $entryTargetFilePath, $true);
+        }
+    }
 }

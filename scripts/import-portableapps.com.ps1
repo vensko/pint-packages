@@ -2,11 +2,11 @@
 
 $pahost = 'https://portableapps.com/';
 $url = $pahost + 'apps'
-$content = $client.DownloadString($url) -replace '<!--(.+?)-->',''
+$content = $client.DownloadString($url) -replace "`n",'' -replace '<!--(.+?)-->',''
 $matches = [regex]::Matches($content, 'apps/\w+/([\w_-]+?)[_-]portable', 'IgnoreCase')
 $targetDir = $PSScriptRoot + '\..\packages\portableapps.com'
 
-md $targetDir -ea 0 | out-null
+ni $targetDir -type directory -ea 0 | out-null
 del (join-path $targetDir '*.ini')
 
 $done = @()
@@ -42,16 +42,21 @@ foreach ($match in $matches) {
 			$link = $pahost.trim('/') + $link
 		}
 
-		$req = [Net.WebRequest]::Create($link)
-		$req.Timeout = 50000
-		$req.UserAgent = $userAgent
-		$res = $req.GetResponse()
-		$res.close()
+		$res = pint-make-request $link
 
-		if ($res.Headers['Content-Type'].contains('text/html')) {
-			write-host 'HTML page' -f red
+		if ($res.ContentType.contains('text/html')) {
+			$res.close()
+			write-host 'HTML page' $link -f red
 			continue
 		}
+
+		if (([string]$res.ResponseUri).contains('./')) {
+			$res.close()
+			write-host 'LINK CONTAINS ./ (POWERSHELL BUG)' -f red
+			continue
+		}
+
+		$res.close()
 
 		write-host 'OK' -f green
 
@@ -61,11 +66,11 @@ link = .paf.exe
 keep = data
 "@
 
-		$ini | out-file (join-path $targetDir "$id.ini") -append -encoding ascii
+		$ini | out-file (join-path $targetDir "$id.ini") -encoding ascii
 
 		$done += @($id)
 
 	} catch {
-		write-host $_.Exception.InnerException.Message -f red
+		write-host $_.Exception.Message -f red
 	}
 }

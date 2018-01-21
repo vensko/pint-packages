@@ -4,9 +4,9 @@ $targetDir = $baseDir + '\..\packages\ugmfree.it'
 $spsDir = join-path $baseDir 'sps'
 $spsFile = join-path $baseDir 'sps.zip'
 
-md $spsDir -ea 0 | out-null
+ni $spsDir -type directory -ea 0 | out-null
 
-md $targetDir -ea 0 | out-null
+ni $targetDir -type directory -ea 0 | out-null
 del (join-path $targetDir '*.ini')
 
 if (!(test-path $spsFile -pathtype leaf)) {
@@ -56,17 +56,48 @@ dir "$spsDir\*.sps" |% {
 
 	try {
 		$res = pint-make-request $dist
+		[string]$contentType = $res.ContentType
+
+		if (([string]$res.ResponseUri).contains('./')) {
+			$res.close()
+			write-host 'LINK CONTAINS ./ (POWERSHELL BUG)' -f red
+			return
+		}
+
 		$res.close()
 
-		if ($res.Headers['Content-Type'].contains('text/html')) {
+		if ($contentType.contains('text/html')) {
 			write-host 'HTML page' $dist -f red
 			return
 		}
 
 		write-host 'OK' -f green
 	} catch {
-		write-host $_.Exception.Message $dist -f red
-		return
+		try {
+			# Retry
+			write-host '(RETRYING) ' -f red -nonewline
+
+			$res = pint-make-request $dist
+			[string]$contentType = $res.ContentType
+
+			if (([string]$res.ResponseUri).contains('./')) {
+				$res.close()
+				write-host 'LINK CONTAINS ./ (POWERSHELL BUG)' -f red
+				return
+			}
+
+			$res.close()
+
+			if ($contentType.contains('text/html')) {
+				write-host 'HTML page' $dist -f red
+				return
+			}
+
+			write-host 'OK' -f green
+		} catch {
+			write-host $_.Exception.Message $dist -f red
+			return
+		}
 	}
 
 	if (!$db[$id]) {
