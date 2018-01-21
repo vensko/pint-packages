@@ -1,6 +1,10 @@
 #!/bin/bash
 
-cd /home/ego/pint/pint-packages/scripts
+cd /home/ego/pint/pint-packages
+
+git pull
+
+cd scripts
 
 pwsh import-sps.ps1
 unlink sps.zip

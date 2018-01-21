@@ -105,7 +105,7 @@ del (join-path $targetDir '*.ini')
 $db.keys |% {
 	$id = $_
 	$ini = $db[$id].keys |% { "$_ = $($db[$id][$_])" }
-	$ini | out-file (join-path $targetDir "$_.ini") -encoding ascii
+	$ini -join "`r`n" | out-file (join-path $targetDir "$_.ini") -encoding ascii
 }
 
 del -r -force $spsDir
