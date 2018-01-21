@@ -24,7 +24,7 @@ foreach ($match in $matches) {
 	write-host $uri.padright(50, ' ') ' ' -nonewline
 
 	try {
-		$appContent = $client.DownloadString($url);
+		$appContent = $client.DownloadString($url) -replace "`n",'' -replace '<!--(.+?)-->',''
 
 		if ($appContent -match '[\d\.]+\+[\d\.]+\w+ download' -or $appContent -like '*online installer*') {
 		    write-host 'ONLINE INSTALLER' -f red
