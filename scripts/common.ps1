@@ -9,6 +9,11 @@ $httpTimeout = 50000
 $client = (new-object Net.WebClient)
 $client.Headers['User-Agent'] = $userAgent
 
+function name-to-id($name)
+{
+	$name.ToLower().trim() -replace ' portable','' -replace '[ _-]+','-' -replace '[^\w-]+',''
+}
+
 function unpack-zip($file, $dir)
 {
 	try {
@@ -98,4 +103,9 @@ function unzip($zipfile, $outdir)
             [System.IO.Compression.ZipFileExtensions]::ExtractToFile($entry, $entryTargetFilePath, $true);
         }
     }
+}
+
+function ensure-dir([string]$p)
+{
+	if (!(is-dir $p)) { md $p -ea 1 | out-null }
 }
