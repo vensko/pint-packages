@@ -1,2 +1,4 @@
-*.zip
+sps.*
 sps/*
+sandboxie/*
+tpfc/*

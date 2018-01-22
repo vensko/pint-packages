@@ -3,6 +3,7 @@
 $targetDir = $baseDir + '\..\packages\ugmfree.it'
 $spsDir = join-path $baseDir 'sps'
 $spsFile = join-path $baseDir 'sps.zip'
+$spsjson = join-path $baseDir 'sps.json'
 
 ni $spsDir -type directory -ea 0 | out-null
 ni $targetDir -type directory -ea 0 | out-null
@@ -15,6 +16,8 @@ if (!(test-path $spsFile -pathtype leaf)) {
 
 del (join-path $spsDir '*.sps')
 unpack-zip $spsFile $spsDir
+
+php -r "error_reporting(0); echo json_encode(array_values(array_filter(array_map('simplexml_load_file', glob('sps/*.sps')))), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);" | out-file $spsJson -encoding ascii
 
 $db = @{}
 
