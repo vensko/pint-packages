@@ -44,10 +44,10 @@ function pint-make-http-request([string]$url)
 		$req.Timeout = $httpTimeout
 		$req.userAgent = user-agent $url
 		$req.AllowAutoRedirect = $true
-		$req.KeepAlive = $true
+		$req.KeepAlive = $false
 		$req.MaximumAutomaticRedirections = 5
 		$req.Accept = '*/*'
-		if (!$url.contains('sourceforge.net') -and !$url.contains('downloads.portableapps.com')) {
+		if (!$url.contains('sourceforge.net') -and !$url.contains('portableapps.com')) {
 			$req.Referer = $url
 		}
 		$req.GetResponse()
@@ -73,12 +73,10 @@ function pint-make-http-request([string]$url)
 function pint-make-request([string]$url)
 {
 	if ($url.StartsWith('ftp:')) {
-		$res = pint-make-ftp-request $url
+		pint-make-ftp-request $url
 	} else {
-		$res = pint-make-http-request $url
+		pint-make-http-request $url
 	}
-
-	return $res
 }
 
 function unzip($zipfile, $outdir)
