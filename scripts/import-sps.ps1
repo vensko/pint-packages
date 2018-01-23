@@ -107,7 +107,7 @@ del (join-path $targetDir '*.ini')
 
 $db.keys | sort |% {
 	$id = $_
-	$ini = $db[$id].keys |% { "$_ = $($db[$id][$_])" }
+	$ini = $db[$id].keys | sort |% { "$_ = $($db[$id][$_])" }
 	$ini -join "`r`n" | out-file (join-path $targetDir "$_.ini") -encoding ascii
 }
 
