@@ -1,0 +1,5 @@
+dist = https://yd.3dyd.com/download/
+link = .exe, !3dyd64
+link64 = .exe, 3dyd64
+keep = appdata.3dyd
+keep64 = appdata.3dyd64

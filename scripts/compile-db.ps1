@@ -30,7 +30,9 @@ $dirs |% {
 		$section += "`r`n`r`n"
 
 		$ini += $section
-		$index[$id] = $section
+
+		$key = $id -replace '[^\w]+',''
+		$index[$key] = $section
 	}
 
 	$file = "$baseDir\packages-$($dir.basename).ini"
